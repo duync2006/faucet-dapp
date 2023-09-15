@@ -187,7 +187,7 @@ function App() {
         </div>
       </section>
       <div className="balance">
-          Total Balance: {balance} Vibi
+          {balance}
       </div>
     </div>
   );
