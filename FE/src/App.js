@@ -12,7 +12,7 @@ const OWNER_PRIVATE_KEY = "e11f5c9977c82fe752f84caeb9ba0c50feabd0ce90088cb26e61e
 function App() {
   const [walletAddress, setWalletAddress] = useState("");
   const [signer, setSigner] = useState();
-  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  // const provider = new ethers.providers.Web3Provider(window.ethereum);
   const owner = new ethers.Wallet(OWNER_PRIVATE_KEY, provider);
   const [fcContract, setFcContract] = useState();
   const [withdrawError, setWithdrawError] = useState("");
