@@ -5,7 +5,6 @@ import faucetContract from "./ethereum/faucet";
 import * as React from 'react';
 import contractAddress from "./contracts/contract-address.json"
 
-
 // const web3 = new Web3(Web3.givenProvider);
 // const contract = new web3.eth.Contract(TokenArtifact.abi, contractAddress.Token);
 const OWNER_PRIVATE_KEY = "e11f5c9977c82fe752f84caeb9ba0c50feabd0ce90088cb26e61ee0fce5950c2";
@@ -19,12 +18,9 @@ function App() {
   const [withdrawError, setWithdrawError] = useState("");
   const [withdrawSuccess, setWithdrawSuccess] = useState("");
   const [transactionData, setTransactionData] = useState("");
-  // let option = 0;
   const [option, setOption] = useState(0);
   useEffect(() => {
-    getCurrentWalletConnected();
-    // addWalletListener();
-    
+    getCurrentWalletConnected();    
   });
 
   const connectWallet = async () => {
@@ -172,6 +168,8 @@ function App() {
     console.log("walletAddress: ", walletAddress);
   };
   return (
+    
+    
     <div>
       {/* <nav className="navbar">
         <div className="container">
@@ -200,7 +198,7 @@ function App() {
       <section className="hero is-fullheight">
         <div className="faucet-hero-body">
           <div className="container has-text-centered main-content">
-            <h1 className="title is-1">Vibi Faucet</h1>
+            <h1 className="title is-1">VIBI Chain Faucet</h1>
             <p>Fast and reliable.</p>
             <div className="mt-5">
               {withdrawError && (
