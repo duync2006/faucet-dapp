@@ -7,8 +7,10 @@ contract faucet {
     uint public amountAllowedPerWeek = 3 ether;
     uint public amountAllowedPerMonth = 10 ether;
     
+    mapping(address => bool) isAdmin;
     constructor() payable {
         owner = payable(msg.sender);
+        isAdmin[owner] = true;
     }
 
     mapping(address => uint256) public lockTime;
@@ -62,7 +64,15 @@ contract faucet {
         owner = newOwner;
     }
 
-    function withdrawal() public onlyOwner {
+    function grantAdmin(address payable newAdmin) public onlyOwner {
+        isAdmin[newAdmin] = true;
+    }
+
+    modifier onlyAdmin () {
+        require(isAdmin[msg.sender] == true, 'Only admin can do this function');
+        _;
+    }
+    function withdrawal() public onlyAdmin {
         owner.transfer(address(this).balance);
     }
     // withdraw function (all token) ==> from address in contructor, grant => function 

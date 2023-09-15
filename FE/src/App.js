@@ -19,79 +19,24 @@ function App() {
   const [withdrawSuccess, setWithdrawSuccess] = useState("");
   const [transactionData, setTransactionData] = useState("");
   const [option, setOption] = useState(0);
+  
   useEffect(() => {
-    getCurrentWalletConnected();    
+    connectContract();    
   });
-
-  const connectWallet = async () => {
-    if (typeof window != "undefined" && typeof window.ethereum != "undefined") {
-      try {
-        /* get provider */
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        /* get accounts */
-        const accounts = await provider.send("eth_requestAccounts", []);
-        /* get signer */
-        setSigner(provider.getSigner());
-        /* local contract instance */
-        setFcContract(faucetContract(provider));
-        /* set active wallet address */
-        setWalletAddress(accounts[0]);
-      } catch (err) {
-        console.error(err.message);
-      }
-    } else {
-      /* MetaMask is not installed */
-      console.log("Please install MetaMask");
-    }
-  };
-
-  const getCurrentWalletConnected = async () => {
-    if (typeof window != "undefined" && typeof window.ethereum != "undefined") {
-      try {
-        /* get provider */
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-
-        /* get accounts */
-        const accounts = await provider.send("eth_accounts", []);
-        if (accounts.length > 0) {
-          /* get signer */
-          setSigner(provider.getSigner());
-          /* local contract instance */
-          setFcContract(faucetContract(provider));
-          /* set active wallet address */
-          // setWalletAddress(accounts[0]);
-        } else {
-          console.log("Connect to MetaMask using the Connect Wallet button");
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    } else {
-      /* MetaMask is not installed */
-      console.log("Please install MetaMask");
-    }
-  };
-
-  const addWalletListener = async () => {
-    if (typeof window != "undefined" && typeof window.ethereum != "undefined") {
-      window.ethereum.on("accountsChanged", (accounts) => {
-        setWalletAddress(accounts[0]);
-      });
-    } else {
-      /* MetaMask is not installed */
-      setWalletAddress("");
-      console.log("Please install MetaMask");
-    }
-  };
-  const donate = async () => {
-
+  
+  const connectContract = async () => {
+    let url = "https://vibi-seed.vbchain.vn/";
+    let customHttpProvider = new ethers.providers.JsonRpcProvider(url);
+    console.log((await customHttpProvider.getNetwork()).chainId)
+    setFcContract(await faucetContract(customHttpProvider))
   }
+
   const faucetByDay = async () => {
     setWithdrawError("");
     setWithdrawSuccess("");
     console.log(walletAddress)
     try {
-      console.log("helloworld")
+      console.log(fcContract)
       const fcContractWithSigner = fcContract.connect(owner);
       console.log(fcContractWithSigner)
       const estimatedGasLimit = await fcContractWithSigner.estimateGas.requestTokensByDay(walletAddress);
@@ -171,30 +116,6 @@ function App() {
     
     
     <div>
-      {/* <nav className="navbar">
-        <div className="container">
-          <div className="navbar-brand">
-            <h1 className="navbar-item is-size-4">vibi-seed</h1>
-          </div>
-          <div id="navbarMenu" className="navbar-menu">
-            <div className="navbar-end is-align-items-center">
-              <button
-                className="button is-white connect-wallet"
-                onClick={connectWallet}
-              >
-                <span className="is-link has-text-weight-bold">
-                  {walletAddress && walletAddress.length > 0
-                    ? `Connected: ${walletAddress.substring(
-                        0,
-                        6
-                      )}...${walletAddress.substring(38)}`
-                    : "Connect Wallet"}
-                </span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav> */}
       <section className="hero is-fullheight">
         <div className="faucet-hero-body">
           <div className="container has-text-centered main-content">
