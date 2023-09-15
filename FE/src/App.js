@@ -3,6 +3,7 @@ import "./App.css";
 import { ethers } from "ethers";
 import faucetContract from "./ethereum/faucet";
 import * as React from 'react';
+import contractAddress from "./contracts/contract-address.json"
 
 
 // const web3 = new Web3(Web3.givenProvider);
@@ -18,12 +19,13 @@ function App() {
   const [withdrawError, setWithdrawError] = useState("");
   const [withdrawSuccess, setWithdrawSuccess] = useState("");
   const [transactionData, setTransactionData] = useState("");
-  let option = 0;
+  // let option = 0;
+  const [option, setOption] = useState(0);
   useEffect(() => {
     getCurrentWalletConnected();
-    addWalletListener();
+    // addWalletListener();
     
-  }, [walletAddress]);
+  });
 
   const connectWallet = async () => {
     if (typeof window != "undefined" && typeof window.ethereum != "undefined") {
@@ -52,6 +54,7 @@ function App() {
       try {
         /* get provider */
         const provider = new ethers.providers.Web3Provider(window.ethereum);
+
         /* get accounts */
         const accounts = await provider.send("eth_accounts", []);
         if (accounts.length > 0) {
@@ -60,12 +63,12 @@ function App() {
           /* local contract instance */
           setFcContract(faucetContract(provider));
           /* set active wallet address */
-          setWalletAddress(accounts[0]);
+          // setWalletAddress(accounts[0]);
         } else {
           console.log("Connect to MetaMask using the Connect Wallet button");
         }
       } catch (err) {
-        console.error(err.message);
+        console.error(err);
       }
     } else {
       /* MetaMask is not installed */
@@ -90,8 +93,9 @@ function App() {
   const faucetByDay = async () => {
     setWithdrawError("");
     setWithdrawSuccess("");
-    console.log(signer)
+    console.log(walletAddress)
     try {
+      console.log("helloworld")
       const fcContractWithSigner = fcContract.connect(owner);
       console.log(fcContractWithSigner)
       const estimatedGasLimit = await fcContractWithSigner.estimateGas.requestTokensByDay(walletAddress);
@@ -102,8 +106,9 @@ function App() {
       setWithdrawSuccess("Operation succeeded - enjoy your tokens!");
       setTransactionData(resp.hash);
     } catch (err) {
-      // setWithdrawError(err.message);
-      setWithdrawError("Please wait next time to faucet!")
+      // console.log(err.reason);
+      setWithdrawError(err.reason);
+      // setWithdrawError("Please wait next day to faucet!")
 
     }
   };
@@ -122,8 +127,8 @@ function App() {
       setWithdrawSuccess("Operation succeeded - enjoy your tokens!");
       setTransactionData(resp.hash);
     } catch (err) {
-      // setWithdrawError(err.message);
-      setWithdrawError("Please wait next time to faucet!")
+      setWithdrawError(err.reason);
+      // setWithdrawError("Please wait next week to faucet!")
     }
   };
   const faucetByMonth = async () => {
@@ -142,16 +147,16 @@ function App() {
       setTransactionData(resp.hash);
     } catch (err) {
       // setWithdrawError(err.message);
-      setWithdrawError("Please wait next time to faucet!")
-
+      setWithdrawError(err.reason);
     }
   };
   const handleOption = (value) => {
-    option = value;
-    console.log(option)
+    setOption(value);
+    // console.log(walletAddress)
   }
   const handleFaucet = async (value) => {
-    console.log("helloworld")
+    console.log("value: ", value)
+    console.log("option: ", option)
     if(value == 0) {
       setWithdrawError("Please choose one Faucet option. ");
     } else if (value == 1){
@@ -161,12 +166,14 @@ function App() {
     } else if (value == 3) {
       await faucetByMonth();
     }
-    
-
   }
+  const handleInputChange = (event) => {
+    setWalletAddress(event.target.value);
+    console.log("walletAddress: ", walletAddress);
+  };
   return (
     <div>
-      <nav className="navbar">
+      {/* <nav className="navbar">
         <div className="container">
           <div className="navbar-brand">
             <h1 className="navbar-item is-size-4">vibi-seed</h1>
@@ -189,11 +196,11 @@ function App() {
             </div>
           </div>
         </div>
-      </nav>
+      </nav> */}
       <section className="hero is-fullheight">
         <div className="faucet-hero-body">
           <div className="container has-text-centered main-content">
-            <h1 className="title is-1">Faucet VBS</h1>
+            <h1 className="title is-1">Vibi Faucet</h1>
             <p>Fast and reliable.</p>
             <div className="mt-5">
               {withdrawError && (
@@ -211,13 +218,14 @@ function App() {
                     type="text"
                     placeholder="Enter your wallet address (0x...)"
                     defaultValue={walletAddress}
+                    onChange={handleInputChange}
                   />
                 </div>
                 <div className="column">
                   <button
                     className="button is-link is-medium"
                     onClick={() => handleFaucet(option)}
-                    disabled={walletAddress ? false : true}
+                    disabled={ walletAddress ? false : true}
                   >
                     GET TOKENS
                   </button>
@@ -241,6 +249,19 @@ function App() {
                   </p>
                 </div>
               </article>
+              {/* <article className="panel is-grey-darker"> */}
+              <div className="donate">
+               Donate for me to this address: <i>{contractAddress.Token}</i>
+              </div>
+                {/* <p className="panel-heading">Transaction Data</p> */}
+                {/* <div className="panel-block">
+                  <p>
+                    {transactionData
+                      ? `Transaction hash: ${transactionData}`
+                      : "--"}
+                  </p>
+                </div> */}
+              {/* </article> */}
             </div>
           </div>
         </div>

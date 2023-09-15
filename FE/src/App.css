@@ -1,7 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Mulish:wght@400;700&display=swap');
 body {
   background: url("./images/bg-1.png") no-repeat;
   background-color: #070709;
   color: white;
+  font-family: 'Mulish', sans-serif;
 }
 
 .title {
@@ -71,4 +73,8 @@ body {
 }
 .button {
   margin-right: 20px;
+}
+.donate {
+  margin-top: 15px;
+  font-size: large;
 }

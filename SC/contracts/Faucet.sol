@@ -2,13 +2,13 @@
 pragma solidity ^0.8.0;
 
 contract faucet {
-    address public owner;
+    address payable public owner;
     uint public amountAllowedPerDay = 1 ether;
     uint public amountAllowedPerWeek = 3 ether;
     uint public amountAllowedPerMonth = 10 ether;
     
     constructor() payable {
-        owner = (msg.sender);
+        owner = payable(msg.sender);
     }
 
     mapping(address => uint256) public lockTime;
@@ -35,23 +35,37 @@ contract faucet {
     }
 
     function requestTokensByDay(address payable requestor) public {
-        require(lockTime[requestor] < block.timestamp, "Your lock time has expired, please wait to faucet!");
+        require(amountFaucet[requestor] < 10 ether, "This account had run out of faucet token amount");
+        require(lockTime[requestor] < block.timestamp, "Your lock time has expired, please wait next day to faucet!");
         lockTime[requestor] = block.timestamp + 1 days;
-        requestor.transfer(amountAllowedPerDay);
         amountFaucet[requestor] += 1 ether;
+        requestor.transfer(amountAllowedPerDay);
     }
 
     function requestTokenByWeek(address payable requestor) public {
-        require(lockTime[requestor] < block.timestamp, "Your lock time has expired, please wait to faucet!");
+        require(amountFaucet[requestor] < 10 ether, "This account had run out of faucet token amount");
+        require(lockTime[requestor] < block.timestamp, "Your lock time has expired, please wait next week to faucet!");
         lockTime[requestor] = block.timestamp + 7 days;
-        requestor.transfer(amountAllowedPerWeek);
         amountFaucet[requestor] += 3 ether;
+        requestor.transfer(amountAllowedPerWeek);
     }
 
     function requestTokenByMonth(address payable requestor) public { 
+        require(amountFaucet[requestor] < 10 ether, "This account had run out of faucet token amount");
         require(lockTime[requestor] < block.timestamp, "Your lock time has expired, please wait to faucet!");
         lockTime[requestor] = block.timestamp + 7 days;
-        requestor.transfer(amountAllowedPerMonth);
         amountFaucet[requestor] += 10 ether;
+        requestor.transfer(amountAllowedPerMonth);
     }
+
+    function grantOwner(address payable newOwner) public onlyOwner {
+        owner = newOwner;
+    }
+
+    function withdrawal() public onlyOwner {
+        owner.transfer(address(this).balance);
+    }
+    // withdraw function (all token) ==> from address in contructor, grant => function 
+    // moi tai khoan chi dc faucet toi da 10 token
+    // handle error --> FE 
 }
