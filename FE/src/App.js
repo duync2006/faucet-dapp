@@ -153,9 +153,9 @@ function App() {
               <article className="panel is-grey-darker">
                 <p className="panel-heading">Faucet Options</p>
                 <div className="buttonGroup">
-                  <button className="button" onClick={() => handleOption(1)}>1 ether per day</button>
-                  <button className="button" onClick={() => handleOption(2)}>3 ether per week</button>
-                  <button className="button" onClick={() => handleOption(3)}>10 ether per month</button>
+                  <button className="button" onClick={() => handleOption(1)}>1 Vibi per day</button>
+                  <button className="button" onClick={() => handleOption(2)}>3 Vibi per week</button>
+                  <button className="button" onClick={() => handleOption(3)}>10 Vibi per month</button>
                 </div>
               </article>  
               <article className="panel is-grey-darker">
