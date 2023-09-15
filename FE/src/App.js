@@ -19,9 +19,17 @@ function App() {
   const [withdrawSuccess, setWithdrawSuccess] = useState("");
   const [transactionData, setTransactionData] = useState("");
   const [option, setOption] = useState(0);
+  const [balance, setBalance] = useState(0)
   
   useEffect(() => {
-    connectContract();    
+    const getBalance = async() => {
+      let number = Number(await provider.getBalance(contractAddress.Token))/(10**18);
+      console.log(number)
+      console.log("balance: ", balance)
+      setBalance(number);
+    }
+    getBalance();
+    connectContract();
   });
   
   const connectContract = async () => {
@@ -112,6 +120,7 @@ function App() {
     setWalletAddress(event.target.value);
     console.log("walletAddress: ", walletAddress);
   };
+  
   return (
     
     
@@ -172,19 +181,14 @@ function App() {
               <div className="donate">
                Donate for me to this address: <i>{contractAddress.Token}</i>
               </div>
-                {/* <p className="panel-heading">Transaction Data</p> */}
-                {/* <div className="panel-block">
-                  <p>
-                    {transactionData
-                      ? `Transaction hash: ${transactionData}`
-                      : "--"}
-                  </p>
-                </div> */}
-              {/* </article> */}
+              
             </div>
           </div>
         </div>
       </section>
+      <div className="balance">
+          Total Balance: {balance} Vibi
+      </div>
     </div>
   );
 }
