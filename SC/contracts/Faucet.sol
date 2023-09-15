@@ -12,6 +12,10 @@ contract faucet {
         owner = payable(msg.sender);
         isAdmin[owner] = true;
     }
+    
+    receive() external payable {
+        
+    }
 
     mapping(address => uint256) public lockTime;
     mapping(address => uint256) public amountFaucet;
