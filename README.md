@@ -7,14 +7,14 @@ Clone down this repository via this link: _https://github.com/duync2006/faucet-d
 
 ## Installation:
 
-**Step 1:** ```cd faucet-dapp/FE```
-**Step 2:** ```npm install```
-**Step 3:** ``` cd ../BE```
-**Step 4:** ```npm install```
+**Step 1:** ```cd faucet-dapp/FE``` <br />
+**Step 2:** ```npm install``` <br />
+**Step 3:** ``` cd ../BE``` <br />
+**Step 4:** ```npm install``` <br />
 
 ## Run app
 
-**Step 1:** Go to FE directory
-**Step 2:** ```npm start```
+**Step 1:** Go to FE directory <br />
+**Step 2:** ```npm start``` <br />
 
 
