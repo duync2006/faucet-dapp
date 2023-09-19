@@ -79,7 +79,7 @@ body {
   font-size: large;
 }
 .balance {
-  background-color: #333;
+  /* background-color: #333; */
   opacity: 0.6;
   margin-left: 97%;
   font-size: 16px;

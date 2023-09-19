@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import "./App.css";
-import { ethers } from "ethers";
+// import { ethers } from "ethers";
+import { ethers, utils} from "ethers";
+import {NonceManager} from '@ethersproject/experimental'
 import faucetContract from "./ethereum/faucet";
 import * as React from 'react';
 import contractAddress from "./contracts/contract-address.json"
-
+import faucet from "./contracts/faucet.json"
 // const web3 = new Web3(Web3.givenProvider);
 // const contract = new web3.eth.Contract(TokenArtifact.abi, contractAddress.Token);
 const OWNER_PRIVATE_KEY = "e11f5c9977c82fe752f84caeb9ba0c50feabd0ce90088cb26e61ee0fce5950c2";
@@ -19,24 +21,30 @@ function App() {
   const [withdrawSuccess, setWithdrawSuccess] = useState("");
   const [transactionData, setTransactionData] = useState("");
   const [option, setOption] = useState(0);
-  const [balance, setBalance] = useState(0)
-  
+  const [balance, setBalance] = useState(0);
+  const gasLimit = '0x100000'
+  let ABI = faucet.abi;
+  let iface = new ethers.utils.Interface(ABI);
+  const nonceManager = new NonceManager(owner);
+  console.log("nonceManager: ", nonceManager);
+
   useEffect(() => {
-    const getBalance = async() => {
-      let number = Number(await provider.getBalance(contractAddress.Token))/(10**18);
-      console.log(number)
-      console.log("balance: ", balance)
-      setBalance(number);
-    }
+    
     getBalance();
     connectContract();
-  });
+  }, []);
   
   const connectContract = async () => {
     let url = "https://vibi-seed.vbchain.vn/";
     let customHttpProvider = new ethers.providers.JsonRpcProvider(url);
-    console.log((await customHttpProvider.getNetwork()).chainId)
-    setFcContract(await faucetContract(customHttpProvider))
+    await provider.getNetwork().chainId;
+    setFcContract(await faucetContract(provider))
+  }
+  const getBalance = async() => {
+    let number = Number(await provider.getBalance(contractAddress.Token))/(10**18);
+    // console.log(number)
+    // console.log("balance: ", balance)
+    setBalance(number);
   }
 
   const faucetByDay = async () => {
@@ -49,17 +57,26 @@ function App() {
       console.log(fcContractWithSigner)
       const estimatedGasLimit = await fcContractWithSigner.estimateGas.requestTokensByDay(walletAddress);
       console.log(estimatedGasLimit)
-      const resp = await fcContractWithSigner.requestTokensByDay(walletAddress, {
-        gasPrice: await fcContract.estimateGas.requestTokensByDay(walletAddress),
-      });
-      setWithdrawSuccess("Operation succeeded - enjoy your tokens!");
-      setTransactionData(resp.hash);
-    } catch (err) {
-      // console.log(err.reason);
-      setWithdrawError(err.reason);
-      // setWithdrawError("Please wait next day to faucet!")
+      let data = iface.encodeFunctionData("requestTokensByDay(address)", [walletAddress]);
+      console.log("function data: ", data)
 
+      const tx =  {
+        to: contractAddress.Token,
+        gasPrice: await fcContract.estimateGas.requestTokensByDay(walletAddress),
+        nonce: await provider.getTransactionCount("0x76E046c0811edDA17E57dB5D2C088DB0F30DcC74", 'latest'),
+        gasLimit: utils.hexlify(gasLimit),
+        data: data
+      };
+      await nonceManager.sendTransaction(tx).then((resp) => {
+        console.log('TX hash: ', resp.hash)
+        setTransactionData(resp.hash);
+        // getBalance();
+      })
+      setWithdrawSuccess("Operation succeeded - enjoy your tokens!");
+    } catch (err) {
+      setWithdrawError(err.reason);
     }
+    
   };
   const faucetByWeek = async () => {
     setWithdrawError("");
@@ -85,6 +102,7 @@ function App() {
     setWithdrawSuccess("");
     console.log(signer)
     try {
+      
       const fcContractWithSigner = fcContract.connect(owner);
       console.log(fcContractWithSigner)
       const estimatedGasLimit = await fcContractWithSigner.estimateGas.requestTokenByMonth(walletAddress);
@@ -99,13 +117,10 @@ function App() {
       setWithdrawError(err.reason);
     }
   };
-  const handleOption = (value) => {
+  const handleOption = async(value) => {
     setOption(value);
-    // console.log(walletAddress)
   }
   const handleFaucet = async (value) => {
-    console.log("value: ", value)
-    console.log("option: ", option)
     if(value == 0) {
       setWithdrawError("Please choose one Faucet option. ");
     } else if (value == 1){
@@ -121,6 +136,15 @@ function App() {
     console.log("walletAddress: ", walletAddress);
   };
   
+  const getPendingTransaction = async() => { 
+    console.log("hello")
+    provider.on("pending", (txHash) => {
+      console.log("Hello2")
+      console.log(txHash)
+    })
+  }
+
+  getPendingTransaction();
   return (
     
     
@@ -194,5 +218,3 @@ function App() {
 }
 
 export default App;
-
-
