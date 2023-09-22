@@ -90,7 +90,4 @@ contract faucet {
     function withdrawal() public onlyAdmin {
         owner.transfer(address(this).balance);
     }
-    // withdraw function (all token) ==> from address in contructor, grant => function 
-    // moi tai khoan chi dc faucet toi da 10 token
-    // handle error --> FE 
 }

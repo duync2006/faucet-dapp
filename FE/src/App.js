@@ -5,6 +5,7 @@ import contractAddress from "./contracts/contract-address.json"
 import faucet from "./contracts/faucet.json";
 import Web3 from 'web3';
 import createLock from "./simpleLock"
+import successImg from "./images/success.jpg"
 // config web3 instance
 let ABI = faucet.abi;
 const OWNER_PRIVATE_KEY = "e11f5c9977c82fe752f84caeb9ba0c50feabd0ce90088cb26e61ee0fce5950c2";
@@ -19,7 +20,10 @@ function App() {
   const [transactionData, setTransactionData] = useState("");
   const [option, setOption] = useState(0);
   const [balance, setBalance] = useState(0);
-
+  const [pending, setPending] = useState(false);
+  const [success, setSuccess] = useState(false);
+  // let pending = false;
+  // let success = false;
   useEffect(() => {
     getBalance();
   }, []);
@@ -62,13 +66,23 @@ const faucetByDay = async (walletAddress) => {
     
     console.log(raw)
     setTransactionData(raw.transactionHash)
+    // setInterval(() => {console.log("transactionData: ", transactionData)}, 10000)
     nonce = Number(nonce) + 1;
+    // pending = true;
+    // success = false
+    setPending(true);
+    setSuccess(false);
+
     lock.release()
-    const hash = await web3.eth.sendSignedTransaction(raw.rawTransaction)
+    const hash = await web3.eth.sendSignedTransaction(raw.rawTransaction).on('receipt', ()=> {
+        setPending(false);
+        setSuccess(true);
+      console.log("hello it done")
+      console.log("success when receipt: ",success)
+      console.log("pending when receipt: ",pending)
+    })
     
     console.log(hash.transactionHash)
-    // setTransactionData(hash.transactionHash)
-    // setWithdrawSuccess("Operation succeeded - enjoy your tokens!");  
     return {status: 1, message: hash.transactionHash};
   } catch (err) {
     console.log(err)
@@ -103,6 +117,7 @@ const faucetByWeek = async (walletAddress) => {
     const raw = await web3.eth.accounts.signTransaction(tx, OWNER_PRIVATE_KEY)
     console.log(raw)
     setTransactionData(raw.transactionHash)
+      
 
     const hash = await web3.eth.sendSignedTransaction(raw.rawTransaction)
     console.log(hash.transactionHash)
@@ -182,6 +197,14 @@ const faucetByMonth = async (walletAddress) => {
       else if (result.status == 0) setWithdrawError(result.message.slice(15));
     }
   }
+  // const haldleTransactionState = () => {
+  //   if (pending == true) {
+  //     return "Pending";
+  //   }
+  //   if (success == true) {
+  //     return "Success"
+  //   }
+  // }
   return (
     
     
@@ -236,6 +259,15 @@ const faucetByMonth = async (walletAddress) => {
                       ? `Transaction hash: ${transactionData}`
                       : "--"}
                   </p>
+                  <div>
+                  {/* {transactionData ?
+                    (pending ? <div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div> : "") 
+                    (success ? <img src={successImg} /> : "") : ''
+                  } */}
+                  </div>
+                  {transactionData && pending ? <div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div> : " " }
+                  {transactionData && success ? <img style = {{width: '2%', height: "2%", marginLeft: '15px'}} src={successImg} /> : "" }
+                  {/* <div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div> */}
                 </div>
               </article>
               {/* <article className="panel is-grey-darker"> */}
