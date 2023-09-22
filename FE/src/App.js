@@ -1,13 +1,10 @@
 import { useEffect, useState } from "react";
 import "./App.css";
-import { ethers, utils} from "ethers";
-import {NonceManager} from '@ethersproject/experimental'
-import faucetContract from "./ethereum/faucet";
 import * as React from 'react';
 import contractAddress from "./contracts/contract-address.json"
 import faucet from "./contracts/faucet.json";
 import Web3 from 'web3';
-import {faucetByDay, faucetByWeek, faucetByMonth} from "./sendTx";
+import createLock from "./simpleLock"
 // config web3 instance
 let ABI = faucet.abi;
 const OWNER_PRIVATE_KEY = "e11f5c9977c82fe752f84caeb9ba0c50feabd0ce90088cb26e61ee0fce5950c2";
@@ -17,113 +14,143 @@ const contract = new web3.eth.Contract(ABI, contractAddress.Token)
 
 function App() {
   const [walletAddress, setWalletAddress] = useState("");
-  const [signer, setSigner] = useState();
-  const provider = new ethers.providers.JsonRpcProvider("https://vibi-seed.vbchain.vn/");
-  const owner = new ethers.Wallet(OWNER_PRIVATE_KEY, provider);
-  const [fcContract, setFcContract] = useState();
   const [withdrawError, setWithdrawError] = useState("");
   const [withdrawSuccess, setWithdrawSuccess] = useState("");
   const [transactionData, setTransactionData] = useState("");
   const [option, setOption] = useState(0);
   const [balance, setBalance] = useState(0);
-  const gasLimit = '0x100000'
-  let iface = new ethers.utils.Interface(ABI);
-  const nonceManager = new NonceManager(owner);
-  // console.log("nonceManager: ", nonceManager);
 
   useEffect(() => {
-    
     getBalance();
-    // connectContract();
   }, []);
   
-  // const connectContract = async () => {
-  //   let url = "https://vibi-seed.vbchain.vn/";
-  //   // let customHttpProvider = new ethers.providers.JsonRpcProvider(url);
-  //   await provider.getNetwork().chainId;
-  //   setFcContract(await faucetContract(provider))
-  // }
   const getBalance = async() => {
     let number = Number(await web3.eth.getBalance(contractAddress.Token))/(10**18);
     // console.log(number)
     // console.log("balance: ", balance)
     setBalance(number);
   }
+  let nonce = 0;
 
-  // const faucetByDay = async () => {
-  //   setWithdrawError("");
-  //   setWithdrawSuccess("");
-  //   console.log(walletAddress)
-  //   try {
-  //     web3.eth.handleRevert = true;
-  //     const estimatedGasLimit = await contract.methods.requestTokensByDay(walletAddress).estimateGas();
-  //     // console.log("estimategas: ", contract.methods.requestTokensByDay(walletAddress).estimateGas())
-  //     console.log(estimatedGasLimit)
-  //     let data = contract.methods.requestTokensByDay(walletAddress).encodeABI();
-  //     console.log(data)
+const lock = createLock("send")
 
-  //     let tx = {
-  //       nonce: await web3.eth.getTransactionCount("0x76E046c0811edDA17E57dB5D2C088DB0F30DcC74", 'pending'),
-  //       to: contractAddress.Token,
-  //       from: "0x76E046c0811edDA17E57dB5D2C088DB0F30DcC74",
-  //       gasPrice:  await contract.methods.requestTokensByDay(walletAddress).estimateGas(),
-  //       gasLimit: (await web3.eth.getBlock("latest")).gasLimit,
-  //       data: data
-  //     }
-  //     const raw = await web3.eth.accounts.signTransaction(tx, OWNER_PRIVATE_KEY)
-  //     console.log(raw)
-  //     const hash = await web3.eth.sendSignedTransaction(raw.rawTransaction)
-  //     console.log(hash)
-  //     setTransactionData(hash.transactionHash)
-  //     setWithdrawSuccess("Operation succeeded - enjoy your tokens!");
-  //   } catch (err) {
-  //     if(err.message == "Returned error: replacement transaction underpriced") {
-  //       faucetByDay();
-  //     } else {
-  //       setWithdrawError(err.message);
-  //     }
-  //   }
+const faucetByDay = async (walletAddress) => {
+  // setWithdrawError("");
+  // setWithdrawSuccess("");
+  console.log(walletAddress)
+  try {
+    await lock.acquire()
+
+    const estimatedGasLimit = await contract.methods.requestTokensByDay(walletAddress).estimateGas().then(() => {
+      setWithdrawSuccess("Operation succeeded - enjoy your tokens!");
+    })
+    console.log("estimatedGasLimit: ", estimatedGasLimit);
+    let data = contract.methods.requestTokensByDay(walletAddress).encodeABI();
+    console.log(data)
+    const _nonce = await web3.eth.getTransactionCount("0x76E046c0811edDA17E57dB5D2C088DB0F30DcC74", 'pending').catch(console.log)
+    nonce = nonce > _nonce ? nonce : _nonce;
+    console.log("nonce:", _nonce)
+    let tx = {
+      nonce: nonce,
+      to: contractAddress.Token,
+      from: "0x76E046c0811edDA17E57dB5D2C088DB0F30DcC74",
+      gasPrice:  await contract.methods.requestTokensByDay(walletAddress).estimateGas(),
+      gasLimit: (await web3.eth.getBlock("latest")).gasLimit,
+      data: data
+    }
+    const raw = await web3.eth.accounts.signTransaction(tx, OWNER_PRIVATE_KEY)
     
-  // };
-  // const faucetByWeek = async () => {
-  //   setWithdrawError("");
-  //   setWithdrawSuccess("");
-  //   console.log(signer)
-  //   try {
-  //     const fcContractWithSigner = fcContract.connect(owner);
-  //     console.log(fcContractWithSigner)
-  //     const estimatedGasLimit = await fcContractWithSigner.estimateGas.requestTokenByWeek(walletAddress);
-  //     console.log(estimatedGasLimit)
-  //     const resp = await fcContractWithSigner.requestTokenByWeek(walletAddress, {
-  //       gasPrice: await fcContract.estimateGas.requestTokenByWeek(walletAddress),
-  //     });
-  //     setWithdrawSuccess("Operation succeeded - enjoy your tokens!");
-  //     setTransactionData(resp.hash);
-  //   } catch (err) {
-  //     setWithdrawError(err.reason);
-  //     // setWithdrawError("Please wait next week to faucet!")
-  //   }
-  // };
-  // const faucetByMonth = async () => {
-  //   setWithdrawError("");
-  //   setWithdrawSuccess("");
-  //   console.log(signer)
-  //   try {
-      
-  //     const fcContractWithSigner = fcContract.connect(owner);
-  //     console.log(fcContractWithSigner)
-  //     const estimatedGasLimit = await fcContractWithSigner.estimateGas.requestTokenByMonth(walletAddress);
-  //     console.log(estimatedGasLimit)
-  //     const resp = await fcContractWithSigner.requestTokenByMonth(walletAddress, {
-  //       gasPrice: await fcContract.estimateGas.requestTokenByMonth(walletAddress),
-  //     });
-  //     setWithdrawSuccess("Operation succeeded - enjoy your tokens!");
-  //     setTransactionData(resp.hash);
-  //   } catch (err) {
-  //     // setWithdrawError(err.message);
-  //     setWithdrawError(err.reason);
-  //   }
-  // };
+    console.log(raw)
+    setTransactionData(raw.transactionHash)
+    nonce = Number(nonce) + 1;
+    lock.release()
+    const hash = await web3.eth.sendSignedTransaction(raw.rawTransaction)
+    
+    console.log(hash.transactionHash)
+    // setTransactionData(hash.transactionHash)
+    // setWithdrawSuccess("Operation succeeded - enjoy your tokens!");  
+    return {status: 1, message: hash.transactionHash};
+  } catch (err) {
+    console.log(err)
+    // console.log("handleRevert: ", web3.eth.handleRevert)
+    return {status: 0, message: err.message}
+  }
+  
+};
+const faucetByWeek = async (walletAddress) => {
+  console.log(walletAddress)
+  try {
+    await lock.acquire()
+    const estimatedGasLimit = await contract.methods.requestTokenByWeek(walletAddress).estimateGas().then(() => {
+      setWithdrawSuccess("Operation succeeded - enjoy your tokens!");
+    }).catch((err) => {
+      setWithdrawError(err.message)
+      return;
+    })
+    let data = contract.methods.requestTokenByWeek(walletAddress).encodeABI();
+    console.log(data)
+    const _nonce = await web3.eth.getTransactionCount("0x76E046c0811edDA17E57dB5D2C088DB0F30DcC74", 'pending').catch(console.log)
+    nonce = nonce > _nonce ? nonce : _nonce;
+    console.log("nonce:", _nonce)
+    let tx = {
+      nonce: nonce,
+      to: contractAddress.Token,
+      from: "0x76E046c0811edDA17E57dB5D2C088DB0F30DcC74",
+      gasPrice:  await contract.methods.requestTokenByWeek(walletAddress).estimateGas(),
+      gasLimit: (await web3.eth.getBlock("latest")).gasLimit,
+      data: data
+    }
+    const raw = await web3.eth.accounts.signTransaction(tx, OWNER_PRIVATE_KEY)
+    console.log(raw)
+    setTransactionData(raw.transactionHash)
+
+    const hash = await web3.eth.sendSignedTransaction(raw.rawTransaction)
+    console.log(hash.transactionHash)
+    return {status: 1, message: hash.transactionHash};
+  } catch (err) {
+    return {status: 0, message: err.message}
+  } finally {
+    lock.release();
+  }
+};
+
+
+const faucetByMonth = async (walletAddress) => {
+  console.log(walletAddress)
+  try {
+    await lock.acquire()
+    const estimatedGasLimit = await contract.methods.requestTokenByMonth(walletAddress).estimateGas().then(() => {
+      setWithdrawSuccess("Operation succeeded - enjoy your tokens!");
+    }).catch((err) => {
+      setWithdrawError(err.message)
+      return;
+    })
+    let data = contract.methods.requestTokenByMonth(walletAddress).encodeABI();
+    console.log(data)
+    const _nonce = await web3.eth.getTransactionCount("0x76E046c0811edDA17E57dB5D2C088DB0F30DcC74", 'pending').catch(console.log)
+    nonce = nonce > _nonce ? nonce : _nonce;
+    console.log("nonce:", _nonce)
+    let tx = {
+      nonce: nonce,
+      to: contractAddress.Token,
+      from: "0x76E046c0811edDA17E57dB5D2C088DB0F30DcC74",
+      gasPrice:  await contract.methods.requestTokenByMonth(walletAddress).estimateGas(),
+      gasLimit: (await web3.eth.getBlock("latest")).gasLimit,
+      data: data
+    }
+    const raw = await web3.eth.accounts.signTransaction(tx, OWNER_PRIVATE_KEY)
+    console.log(raw)
+    setTransactionData(raw.transactionHash)
+
+    const hash = await web3.eth.sendSignedTransaction(raw.rawTransaction)
+    console.log(hash.transactionHash)
+    return {status: 1, message: hash.transactionHash};
+  } catch (err) {
+    return {status: 0, message: err.message}
+  } finally {
+    lock.release();
+  }
+  };
   const handleOption = async(value) => {
     setOption(value);
   }
@@ -152,7 +179,7 @@ function App() {
         setWithdrawSuccess("Operation succeeded - enjoy your tokens!")
         setTransactionData(result.message);
       }
-      else if (result.status == 0) setWithdrawError(result.message);
+      else if (result.status == 0) setWithdrawError(result.message.slice(15));
     }
   }
   return (

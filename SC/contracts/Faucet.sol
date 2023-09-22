@@ -41,29 +41,40 @@ contract faucet {
     }
 
     function requestTokensByDay(address payable requestor) public {
-        require(amountFaucet[requestor] < 10 ether, "This account had run out of faucet token amount");
-        require(lockTime[requestor] < block.timestamp, "Your lock time has expired, please wait next day to faucet!");
+        handleRevertError(requestor);
+        // require(amountFaucet[requestor] < 10 ether, "This account had run out of faucet token amount");
+        // require(lockTime[requestor] < block.timestamp, "Your lock time has expired, please wait next day to faucet!");
         lockTime[requestor] = block.timestamp + 1 days;
         amountFaucet[requestor] += 1 ether;
         requestor.transfer(amountAllowedPerDay);
     }
 
     function requestTokenByWeek(address payable requestor) public {
-        require(amountFaucet[requestor] < 10 ether, "This account had run out of faucet token amount");
-        require(lockTime[requestor] < block.timestamp, "Your lock time has expired, please wait next week to faucet!");
+        handleRevertError(requestor);
+        // require(amountFaucet[requestor] < 10 ether, "This account had run out of faucet token amount");
+        // require(lockTime[requestor] < block.timestamp, "Your lock time has expired, please wait next week to faucet!");
         lockTime[requestor] = block.timestamp + 7 days;
         amountFaucet[requestor] += 3 ether;
         requestor.transfer(amountAllowedPerWeek);
     }
 
-    function requestTokenByMonth(address payable requestor) public { 
-        require(amountFaucet[requestor] < 10 ether, "This account had run out of faucet token amount");
-        require(lockTime[requestor] < block.timestamp, "Your lock time has expired, please wait to faucet!");
-        lockTime[requestor] = block.timestamp + 7 days;
+    function requestTokenByMonth(address payable requestor) public {
+        handleRevertError(requestor);
+        require(10 ether - amountFaucet[requestor] == 10 ether , "This account does not allow to faucet this options!");
+        // require(lockTime[requestor] < block.timestamp, "Your lock time has expired, please wait to faucet!");
+        lockTime[requestor] = block.timestamp + 30 days;
         amountFaucet[requestor] += 10 ether;
         requestor.transfer(amountAllowedPerMonth);
     }
 
+    function handleRevertError (address payable requestor) view internal {
+        // require((block.timestamp - lockTime[requestor] > 1 days) && (block.timestamp - lockTime[requestor] < 7 days), ""  )
+        if(lockTime[requestor] > block.timestamp) {
+            if(lockTime[requestor] - block.timestamp <= 1 days) revert("Your lock time has expired, please wait next day to faucet!");
+            else if ((lockTime[requestor] - block.timestamp > 1 days) && (lockTime[requestor] - block.timestamp <= 7 days)) revert("Your lock time has expired, please wait next week to faucet!");
+            else revert("This account have run out of faucet amount");
+        }
+    }
     function grantOwner(address payable newOwner) public onlyOwner {
         owner = newOwner;
     }
