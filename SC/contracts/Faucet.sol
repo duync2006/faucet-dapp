@@ -53,6 +53,7 @@ contract faucet {
         handleRevertError(requestor);
         // require(amountFaucet[requestor] < 10 ether, "This account had run out of faucet token amount");
         // require(lockTime[requestor] < block.timestamp, "Your lock time has expired, please wait next week to faucet!");
+        require(amountFaucet[requestor] <= 7, "This account does not allow to faucet this options!");
         lockTime[requestor] = block.timestamp + 7 days;
         amountFaucet[requestor] += 3 ether;
         requestor.transfer(amountAllowedPerWeek);

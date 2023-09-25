@@ -81,7 +81,7 @@ const faucetByDay = async (walletAddress) => {
       console.log("success when receipt: ",success)
       console.log("pending when receipt: ",pending)
     })
-    
+    console.log(hash)
     console.log(hash.transactionHash)
     return {status: 1, message: hash.transactionHash};
   } catch (err) {
@@ -117,15 +117,25 @@ const faucetByWeek = async (walletAddress) => {
     const raw = await web3.eth.accounts.signTransaction(tx, OWNER_PRIVATE_KEY)
     console.log(raw)
     setTransactionData(raw.transactionHash)
-      
+    nonce = Number(nonce) + 1;
+    // pending = true;
+    // success = false
+    setPending(true);
+    setSuccess(false);
+    lock.release();
 
-    const hash = await web3.eth.sendSignedTransaction(raw.rawTransaction)
+    const hash = await web3.eth.sendSignedTransaction(raw.rawTransaction).on('receipt', ()=> {
+      setPending(false);
+      setSuccess(true);
+    console.log("hello it done")
+    console.log("success when receipt: ",success)
+    console.log("pending when receipt: ",pending)
+    })
+    console.log(hash)
     console.log(hash.transactionHash)
-    return {status: 1, message: hash.transactionHash};
+    return {status: 1, message: hash.transactionHash}
   } catch (err) {
     return {status: 0, message: err.message}
-  } finally {
-    lock.release();
   }
 };
 
@@ -156,16 +166,29 @@ const faucetByMonth = async (walletAddress) => {
     const raw = await web3.eth.accounts.signTransaction(tx, OWNER_PRIVATE_KEY)
     console.log(raw)
     setTransactionData(raw.transactionHash)
+    nonce = Number(nonce) + 1;
+    // pending = true;
+    // success = false
+    setPending(true);
+    setSuccess(false);
+    lock.release();
 
-    const hash = await web3.eth.sendSignedTransaction(raw.rawTransaction)
+    const hash = await web3.eth.sendSignedTransaction(raw.rawTransaction).on('receipt', ()=> {
+      setPending(false);
+      setSuccess(true);
+    console.log("hello it done")
+    console.log("success when receipt: ",success)
+    console.log("pending when receipt: ",pending)
+    })
+    console.log(hash)
     console.log(hash.transactionHash)
     return {status: 1, message: hash.transactionHash};
   } catch (err) {
     return {status: 0, message: err.message}
-  } finally {
-    lock.release();
   }
-  };
+};
+
+
   const handleOption = async(value) => {
     setOption(value);
   }
@@ -266,7 +289,7 @@ const faucetByMonth = async (walletAddress) => {
                   } */}
                   </div>
                   {transactionData && pending ? <div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div> : " " }
-                  {transactionData && success ? <img style = {{width: '2%', height: "2%", marginLeft: '15px'}} src={successImg} /> : "" }
+                  {transactionData && success ? <img style = {{width: '1.5%', height: "1.5%", marginLeft: '15px'}} src={successImg} /> : "" }
                   {/* <div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div> */}
                 </div>
               </article>
