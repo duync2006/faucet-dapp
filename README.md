@@ -1,20 +1,16 @@
 # Vibi Faucet Dapp
 An application used to faucet ethers for user.
 
-# Installation and Run App
+# How to run
 
-Clone down this repository via this link: _https://github.com/duync2006/faucet-dapp_
+1. Clone down this repository via this link: _https://github.com/duync2006/faucet-dapp_
+2. Install packages (npm install or yarn install)
+3. Run the project (npm start)
+   
+## Add network on metamask wallet
 
-## Installation:
-
-**Step 1:** ```cd faucet-dapp/FE``` <br />
-**Step 2:** ```npm install``` <br />
-**Step 3:** ``` cd ../BE``` <br />
-**Step 4:** ```npm install``` <br />
-
-## Run app
-
-**Step 1:** Go to FE directory <br />
-**Step 2:** ```npm start``` <br />
-
+1. Go to your Metamask Wallet -> Setting -> Networks -> Add network 
+2. Go to Add network manually
+3. RPC URL: https://vibi-seed.vbchain.vn/
+4. Chain ID: 306
 
